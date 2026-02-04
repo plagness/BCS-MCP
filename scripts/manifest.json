@@ -1,0 +1,208 @@
+{
+  "scripts": [
+    {
+      "name": "sma",
+      "path": "scripts/sma.py",
+      "description": "Простая скользящая средняя (SMA) по списку значений",
+      "category": "trend",
+      "strategies": ["trend_following", "ma_systems"],
+      "input": {
+        "values": "number[]",
+        "period": "number"
+      }
+    },
+    {
+      "name": "ema",
+      "path": "scripts/ema.py",
+      "description": "Экспоненциальная скользящая средняя (EMA) по списку значений",
+      "category": "trend",
+      "strategies": ["trend_following", "ma_systems"],
+      "input": {
+        "values": "number[]",
+        "period": "number"
+      }
+    },
+    {
+      "name": "ema_crossover",
+      "path": "scripts/ema_crossover.py",
+      "description": "Пересечение EMA (сигнал тренда)",
+      "category": "trend",
+      "strategies": ["moving_average_crossover", "trend_following"],
+      "input": {
+        "values": "number[]",
+        "fast": "number",
+        "slow": "number"
+      }
+    },
+    {
+      "name": "rsi",
+      "path": "scripts/rsi.py",
+      "description": "RSI по списку значений",
+      "category": "mean_reversion",
+      "strategies": ["rsi_reversion", "momentum_filters"],
+      "input": {
+        "values": "number[]",
+        "period": "number"
+      }
+    },
+    {
+      "name": "bollinger_bands",
+      "path": "scripts/bollinger_bands.py",
+      "description": "Полосы Боллинджера (средняя, верхняя, нижняя, z-score)",
+      "category": "mean_reversion",
+      "strategies": ["bollinger_reversion", "range_trading"],
+      "input": {
+        "values": "number[]",
+        "period": "number",
+        "std_mult": "number"
+      }
+    },
+    {
+      "name": "zscore",
+      "path": "scripts/zscore.py",
+      "description": "Z-score отклонение от среднего",
+      "category": "mean_reversion",
+      "strategies": ["zscore_strategy", "mean_reversion"],
+      "input": {
+        "values": "number[]",
+        "period": "number"
+      }
+    },
+    {
+      "name": "atr",
+      "path": "scripts/atr.py",
+      "description": "ATR (волатильность) по OHLC",
+      "category": "volatility",
+      "strategies": ["atr_breakout", "risk_sizing"],
+      "input": {
+        "highs": "number[]",
+        "lows": "number[]",
+        "closes": "number[]",
+        "period": "number"
+      }
+    },
+    {
+      "name": "donchian",
+      "path": "scripts/donchian.py",
+      "description": "Каналы Дончиана (верх/низ/середина, пробой)",
+      "category": "breakout",
+      "strategies": ["donchian_channels", "turtle_trading"],
+      "input": {
+        "highs": "number[]",
+        "lows": "number[]",
+        "closes": "number[]",
+        "period": "number"
+      }
+    },
+    {
+      "name": "vwap",
+      "path": "scripts/vwap.py",
+      "description": "VWAP (средневзвешенная цена по объему)",
+      "category": "intraday",
+      "strategies": ["vwap_strategy", "intraday"],
+      "input": {
+        "prices": "number[]",
+        "volumes": "number[]"
+      }
+    },
+    {
+      "name": "orderbook_imbalance",
+      "path": "scripts/orderbook_imbalance.py",
+      "description": "Дисбаланс стакана (bid/ask), спред",
+      "category": "orderflow",
+      "strategies": ["order_flow", "dom_level2"],
+      "input": {
+        "bids": "array",
+        "asks": "array",
+        "depth": "number"
+      }
+    },
+    {
+      "name": "slippage_risk",
+      "path": "scripts/slippage_risk.py",
+      "description": "Оценка риска проскальзывания по спреду и глубине",
+      "category": "risk",
+      "strategies": ["slippage_control", "risk_management"],
+      "input": {
+        "order_size": "number",
+        "bid": "number",
+        "ask": "number",
+        "top_bid_qty": "number",
+        "top_ask_qty": "number"
+      }
+    },
+    {
+      "name": "regime_detector",
+      "path": "scripts/regime_detector.py",
+      "description": "Классификатор рыночного режима (trend/range/volatile)",
+      "category": "meta",
+      "strategies": ["regime_switching", "trend_following", "mean_reversion"],
+      "input": {
+        "closes": "number[]",
+        "highs": "number[] (optional)",
+        "lows": "number[] (optional)",
+        "period": "number"
+      }
+    },
+    {
+      "name": "signal_score",
+      "path": "scripts/signal_score.py",
+      "description": "Сводный скоринг рынка: вероятности тренда/диапазона/пробоя",
+      "category": "signals",
+      "strategies": ["regime_switching", "trend_following", "mean_reversion", "breakout"],
+      "input": {
+        "series": "object {open, high, low, close, volume}",
+        "orderbook": "object (optional)"
+      }
+    },
+    {
+      "name": "fee_estimate",
+      "path": "scripts/fee_estimate.py",
+      "description": "Оценка торговых комиссий по диапазонам",
+      "category": "costs",
+      "strategies": ["unit_economics"],
+      "input": {
+        "trade_value": "number",
+        "roundtrip": "boolean",
+        "broker_pct": "number (optional)",
+        "exchange_pct": "number (optional)"
+      }
+    },
+    {
+      "name": "session_status",
+      "path": "scripts/session_status.py",
+      "description": "Определение торговой сессии и риска по времени (MSK)",
+      "category": "schedule",
+      "strategies": ["kill_zones", "session_filters"],
+      "input": {
+        "timestamp": "string (ISO, optional)",
+        "timezone": "string (optional)"
+      }
+    },
+    {
+      "name": "forts_fee_estimate",
+      "path": "scripts/forts_fee_estimate.py",
+      "description": "Оценка комиссий FORTS (фикс за контракт)",
+      "category": "costs",
+      "strategies": ["unit_economics", "futures"],
+      "input": {
+        "contracts": "number",
+        "roundtrip": "boolean",
+        "broker_fee_rub": "number (optional)",
+        "exchange_fee_rub": "number (optional)"
+      }
+    },
+    {
+      "name": "fx_storage_cost",
+      "path": "scripts/fx_storage_cost.py",
+      "description": "Оценка стоимости хранения валюты (годовых → дневные)",
+      "category": "costs",
+      "strategies": ["unit_economics", "currency"],
+      "input": {
+        "amount": "number",
+        "annual_pct": "number (optional)",
+        "days": "number (optional)"
+      }
+    }
+  ]
+}

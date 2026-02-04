@@ -1,0 +1,7 @@
+node_modules
+server/node_modules
+worker/.venv
+worker/__pycache__
+worker/*.pyc
+.env
+.git

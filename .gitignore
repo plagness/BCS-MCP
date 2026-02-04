@@ -1,0 +1,13 @@
+.env
+.env.local
+node_modules
+server/node_modules
+dist
+worker/__pycache__
+__pycache__/
+*.pyc
+worker/.venv
+.data
+data/
+*.log
+.DS_Store
