@@ -1,8 +1,11 @@
-version: "3.9"
 services:
-  bcs-postgres:
+  bcsdb:
     image: pgvector/pgvector:pg16
-    container_name: bcs-mcp-db
+    container_name: bcsdb
+    labels:
+      - "ns.module=bcs"
+      - "ns.component=db"
+      - "ns.db_owner=bcs"
     environment:
       POSTGRES_USER: bcs
       POSTGRES_PASSWORD: ${BCS_DB_PASSWORD:-bcs_secret}
@@ -11,17 +14,20 @@ services:
       - ./data/postgres:/var/lib/postgresql/data
       - ./db/init:/docker-entrypoint-initdb.d:ro
     ports:
-      - "127.0.0.1:5433:5432"
+      - "127.0.0.1:${PORT_DB_BCS:-${BCS_DB_PORT:-5433}}:5432"
     restart: unless-stopped
 
-  bcs-mcp:
+  bcsmcp:
     build: .
-    container_name: bcs-mcp
+    container_name: bcsmcp
+    labels:
+      - "ns.module=bcs"
+      - "ns.component=mcp"
     env_file: .env
     environment:
-      - BCS_DB_HOST=bcs-postgres
+      BCS_DB_HOST: bcsdb
     restart: unless-stopped
     depends_on:
-      - bcs-postgres
+      - bcsdb
     ports:
-      - "127.0.0.1:3333:3333"
+      - "127.0.0.1:${PORT_MCP_BCS:-${BCS_MCP_PORT:-3332}}:3333"

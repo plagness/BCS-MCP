@@ -30,12 +30,12 @@ cp .env.example .env
 docker compose -f compose.yml up -d
 ```
 
-По умолчанию `.env.example` настроен под docker compose (`BCS_DB_HOST=bcs-postgres`).
+По умолчанию `.env.example` настроен под docker compose (`BCS_DB_HOST=bcsdb`).
 
 Проверка:
 ```bash
-curl http://127.0.0.1:3333/health
-curl http://127.0.0.1:3333/tools
+curl http://127.0.0.1:3332/health
+curl http://127.0.0.1:3332/tools
 ```
 
 MCP по умолчанию работает через **stdio** (MCP_TRANSPORT=stdio). Для большинства MCP‑клиентов это стандартный режим.
@@ -130,7 +130,7 @@ MCP по умолчанию работает через **stdio** (MCP_TRANSPORT
 
 ## Миграции (если база уже создана)
 
-Если контейнер `bcs-postgres` запускался раньше, новые таблицы не создадутся автоматически.
+Если контейнер `bcsdb` запускался раньше, новые таблицы не создадутся автоматически.
 Примените SQL вручную:
 ```
 db/init/01_market.sql

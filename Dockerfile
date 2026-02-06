@@ -1,5 +1,11 @@
 FROM node:20-slim
 
+LABEL org.opencontainers.image.title="bcsmcp" \
+      org.opencontainers.image.description="BCS-MCP unified image (server + worker)" \
+      org.opencontainers.image.source="https://github.com/plagness/BCS-MCP.git" \
+      ns.module="bcs" \
+      ns.component="mcp"
+
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
      python3 python3-pip python3-venv dumb-init \
