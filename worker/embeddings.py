@@ -3,18 +3,16 @@ import aiohttp
 
 from .db import Db
 from .config import Config
+from .llm_backend import embed_text
 from .logger import get_logger, sanitize
 
 log = get_logger("worker.embeddings")
 
 
-def _endpoint(base: str) -> str:
-    return base.rstrip("/") + "/api/embeddings"
-
-
 async def run_embedding_worker(db: Db, config: Config):
-    url = _endpoint(config.ollama_base_url)
-    log.info(f"embedding worker started {sanitize({'url': url, 'model': config.ollama_embed_model})}")
+    log.info(
+        f"embedding worker started {sanitize({'backend': config.llm_backend, 'llm_mcp_base_url': config.llm_mcp_base_url, 'ollama_base_url': config.ollama_base_url, 'model': config.ollama_embed_model})}"
+    )
     while True:
         batch = await db.fetch_embedding_batch(limit=10)
         if not batch:
@@ -24,37 +22,24 @@ async def run_embedding_worker(db: Db, config: Config):
         async with aiohttp.ClientSession() as session:
             for row in batch:
                 try:
-                    payload = {
-                        "model": config.ollama_embed_model,
-                        "prompt": row["text"],
-                    }
                     log.debug(
-                        f"ollama request {sanitize({'entity_type': row['entity_type'], 'entity_id': row['entity_id'], 'chars': len(row['text'])})}"
+                        f"embedding request {sanitize({'entity_type': row['entity_type'], 'entity_id': row['entity_id'], 'chars': len(row['text']), 'backend': config.llm_backend})}"
                     )
-                    async with session.post(url, json=payload) as resp:
-                        if resp.status != 200:
-                            text = await resp.text()
-                            log.error(
-                                f"ollama error {sanitize({'status': resp.status, 'body': text[:500]})}"
-                            )
-                            await db.mark_embedding_failed(row["id"], f"ollama {resp.status}: {text}")
-                            continue
-                        result = await resp.json()
-                        embedding = result.get("embedding")
-                        if not embedding:
-                            log.error("ollama returned empty embedding")
-                            await db.mark_embedding_failed(row["id"], "empty embedding")
-                            continue
-                        await db.store_embedding(
-                            row["id"],
-                            row["entity_type"],
-                            row["entity_id"],
-                            embedding,
-                            row.get("metadata"),
-                        )
-                        log.debug(
-                            f"ollama ok {sanitize({'queue_id': row['id'], 'size': len(embedding)})}"
-                        )
+                    embedding = await embed_text(session=session, config=config, text=row["text"])
+                    if not embedding:
+                        log.error("embedding backend returned empty embedding")
+                        await db.mark_embedding_failed(row["id"], "empty embedding")
+                        continue
+                    await db.store_embedding(
+                        row["id"],
+                        row["entity_type"],
+                        row["entity_id"],
+                        embedding,
+                        row.get("metadata"),
+                    )
+                    log.debug(
+                        f"embedding ok {sanitize({'queue_id': row['id'], 'size': len(embedding)})}"
+                    )
                 except Exception as exc:
-                    log.error(f"ollama exception {sanitize({'error': str(exc)})}")
+                    log.error(f"embedding exception {sanitize({'error': str(exc)})}")
                     await db.mark_embedding_failed(row["id"], str(exc))

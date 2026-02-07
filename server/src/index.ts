@@ -22,6 +22,7 @@ import {
 } from "./query.js";
 import { loadManifest, runScript } from "./scripts.js";
 import { bcs } from "./bcs.js";
+import { embedText, enrichSignalDirection } from "./llm_backend.js";
 import { logger } from "./logger.js";
 
 const app = express();
@@ -174,7 +175,7 @@ const authMiddleware = (req: any, res: any, next: any) => {
 app.get("/health", (_req: Request, res: Response) => {
   res.json({
     status: "ok",
-    version: "26.02.1",
+    version: "2026.02.4",
     time: new Date().toISOString(),
   });
 });
@@ -701,20 +702,7 @@ addTool({
     limit: z.number().int().min(1).max(50).optional().default(10),
   }),
   execute: async (params) => {
-    const resp = await fetch(`${config.ollama.baseUrl}/api/embeddings`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: config.ollama.embedModel,
-        prompt: params.query,
-      }),
-    });
-    if (!resp.ok) {
-      const text = await resp.text();
-      throw new Error(`ollama error: ${resp.status} ${text}`);
-    }
-    const data = await resp.json();
-    const embedding = data.embedding as number[];
+    const embedding = await embedText(params.query);
     const vector = `[${embedding.join(",")}]`;
     const result = await privatePool.query(
       `SELECT entity_type, entity_id, metadata, (embedding <=> $1) AS distance
@@ -783,6 +771,7 @@ addTool({
     lookback: z.number().int().min(20).max(5000).optional().default(200),
     includeFeatures: z.boolean().optional().default(false),
     store: z.boolean().optional().default(true),
+    enrichLlm: z.boolean().optional().default(true),
     maxAgeSeconds: z.number().int().min(1).optional(),
   }),
   execute: async (params) => {
@@ -843,6 +832,29 @@ addTool({
       return { ok: false, error: result.error, details: result };
     }
 
+    const heuristicDirection =
+      result.direction && typeof result.direction === "object"
+        ? result.direction
+        : {};
+    let llmEnrichment: Record<string, unknown> | null = null;
+    if (params.enrichLlm) {
+      llmEnrichment = await enrichSignalDirection({
+        ticker: params.ticker,
+        classCode: params.classCode,
+        timeFrame: params.timeFrame,
+        probs:
+          result.probs && typeof result.probs === "object" ? result.probs : {},
+        direction:
+          heuristicDirection && typeof heuristicDirection === "object"
+            ? heuristicDirection
+            : {},
+      });
+    }
+    const finalDirection =
+      llmEnrichment && Object.keys(llmEnrichment).length
+        ? { ...heuristicDirection, llm: llmEnrichment }
+        : heuristicDirection;
+
     let featuresId: string | null = null;
     if (params.store) {
       const featureRes = await privatePool.query(
@@ -867,7 +879,7 @@ addTool({
           params.timeFrame,
           result.model || "heuristic-v1",
           result.probs || {},
-          result.direction || {},
+          finalDirection,
           featuresId,
         ]
       );
@@ -881,9 +893,10 @@ addTool({
       lookback: series.close.length,
       model: result.model || "heuristic-v1",
       probs: result.probs || {},
-      direction: result.direction || {},
+      direction: finalDirection,
       ageSeconds,
       stale,
+      llmEnrichment,
       featuresId,
       features: params.includeFeatures ? result.features || {} : undefined,
     };

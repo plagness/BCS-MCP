@@ -26,6 +26,11 @@ services:
     env_file: .env
     environment:
       BCS_DB_HOST: bcsdb
+      LLM_BACKEND: ${LLM_BACKEND:-llm_mcp}
+      LLM_MCP_BASE_URL: ${LLM_MCP_BASE_URL:-http://llmcore:8080}
+      LLM_MCP_PROVIDER: ${LLM_MCP_PROVIDER:-auto}
+      LLM_BACKEND_FALLBACK_OLLAMA: ${LLM_BACKEND_FALLBACK_OLLAMA:-1}
+      LLM_BACKEND_TIMEOUT_SEC: ${LLM_BACKEND_TIMEOUT_SEC:-30}
     restart: unless-stopped
     depends_on:
       - bcsdb

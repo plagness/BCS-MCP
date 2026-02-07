@@ -50,6 +50,11 @@ class Config:
 
     ollama_base_url: str
     ollama_embed_model: str
+    llm_backend: str
+    llm_mcp_base_url: str
+    llm_mcp_provider: str
+    llm_backend_fallback_ollama: bool
+    llm_backend_timeout_sec: int
 
     candle_time_frame: str
 
@@ -89,5 +94,10 @@ def load_config() -> Config:
         use_db_instruments=_bool("BCS_USE_DB_INSTRUMENTS", False),
         ollama_base_url=os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434"),
         ollama_embed_model=os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text"),
+        llm_backend=os.getenv("LLM_BACKEND", "llm_mcp").strip().lower() or "llm_mcp",
+        llm_mcp_base_url=os.getenv("LLM_MCP_BASE_URL", "http://llmcore:8080"),
+        llm_mcp_provider=os.getenv("LLM_MCP_PROVIDER", "auto").strip().lower() or "auto",
+        llm_backend_fallback_ollama=_bool("LLM_BACKEND_FALLBACK_OLLAMA", True),
+        llm_backend_timeout_sec=_int("LLM_BACKEND_TIMEOUT_SEC", 30),
         candle_time_frame=os.getenv("BCS_CANDLE_TIMEFRAME", "M1"),
     )

@@ -1,6 +1,6 @@
 {
   "name": "bcs-mcp-server",
-  "version": "26.02.1",
+  "version": "2026.02.4",
   "private": true,
   "type": "module",
   "scripts": {

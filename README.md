@@ -1,6 +1,6 @@
 # BCS-MCP
 
-[![Version](https://img.shields.io/badge/version-2026.02.3-blue.svg)](VERSION)
+[![Version](https://img.shields.io/badge/version-2026.02.4-blue.svg)](VERSION)
 [![Runtime](https://img.shields.io/badge/runtime-node%20%2B%20python-green.svg)](Dockerfile)
 [![Database](https://img.shields.io/badge/database-postgres%20%2B%20pgvector-orange.svg)](compose.yml)
 [![MCP](https://img.shields.io/badge/mcp-enabled-7a3cff.svg)](server/src/index.ts)
@@ -23,13 +23,14 @@
   - `bcs_private` — приватные данные.
 
 ### 🧠 LLM-ready слой
-- Семантический поиск по истории через embeddings (Ollama).
+- Семантический поиск по истории через embeddings (`llm_mcp` default, Ollama fallback).
 - Логи решений и контекст для последующего анализа.
 - Local-first подход: максимум вычислений на стороне БД/скриптов, минимум токенов LLM.
 
 ### 🧮 Скрипты и сигналы
 - Встроенные математические скрипты (`SMA/EMA/RSI`, комиссии, сессии, риск).
 - Каталог скриптов и запуск серверных расчётов без вывода сырых рядов в LLM.
+- `signals.run` сохраняет heuristic сигнал и дополняет `direction.llm` (enrichment без миграции схемы).
 
 ## 🧱 Архитектура
 
@@ -65,6 +66,7 @@ curl http://127.0.0.1:3332/tools
 - `BCS_DB_PORT` — в compose внутри сети: `5432`
 - `MCP_PORT` — порт MCP внутри контейнера (`3333`), наружу опубликован `3332`
 - `OLLAMA_EMBED_MODEL` — модель embeddings
+- `LLM_BACKEND=llm_mcp|ollama`, `LLM_MCP_BASE_URL`, `LLM_MCP_PROVIDER`, `LLM_BACKEND_FALLBACK_OLLAMA`
 
 ## 🧰 MCP-инструменты (группы)
 

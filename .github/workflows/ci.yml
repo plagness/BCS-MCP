@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Docker compose config
+        run: docker compose -f compose.yml config >/dev/null
+
+  markdown:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate local markdown links
+        run: |
+          python - <<'PY'
+          import pathlib, re, sys
+          root = pathlib.Path('.')
+          bad = []
+          pat = re.compile(r'\[[^\]]+\]\(([^)]+)\)')
+          for md in root.rglob('*.md'):
+            if '.git' in md.parts:
+              continue
+            text = md.read_text(encoding='utf-8', errors='ignore')
+            for href in pat.findall(text):
+              href = href.strip()
+              if not href or href.startswith(('http://', 'https://', 'mailto:', '#')):
+                continue
+              target = href.split('#', 1)[0]
+              if not target:
+                continue
+              path = (md.parent / target).resolve() if not target.startswith('/') else (root / target.lstrip('/'))
+              try:
+                path.relative_to(root.resolve())
+              except Exception:
+                bad.append((str(md), href)); continue
+              if not path.exists():
+                bad.append((str(md), href))
+          if bad:
+            print('Broken local markdown links:')
+            for item in bad:
+              print(f' - {item[0]} -> {item[1]}')
+            sys.exit(1)
+          print('Markdown links: OK')
+          PY
+
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Python syntax compile check
+        run: PYTHONPYCACHEPREFIX=/tmp/pycache python -m compileall -q worker scripts
+
+  node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Build MCP server
+        working-directory: server
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
