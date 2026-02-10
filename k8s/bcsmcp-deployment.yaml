@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bcsmcp
+  namespace: ns-bcs
+  labels:
+    app: bcsmcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bcsmcp
+  template:
+    metadata:
+      labels:
+        app: bcsmcp
+    spec:
+      containers:
+      - name: bcsmcp
+        image: bcs-mcp-bcsmcp:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3333
+          name: mcp
+        env:
+        # Переменные окружения из ConfigMap
+        - name: BCS_DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: bcs-config
+              key: DB_HOST
+        - name: LLM_MCP_BASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: bcs-config
+              key: LLM_CORE_URL
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: bcs-config
+              key: LOG_LEVEL
+        # Переменные окружения из Secret
+        - name: BCS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: bcs-secrets
+              key: BCS_DB_PASSWORD
+        - name: BCS_DB_USER
+          value: "bcs"
+        - name: BCS_REFRESH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: bcs-secrets
+              key: BCS_REFRESH_TOKEN
+        - name: MCP_HTTP_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: bcs-secrets
+              key: MCP_HTTP_TOKEN
+        # Проверка живучести MCP сервиса
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3333
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        # Проверка готовности сервиса
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3333
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+      # Гарантия запуска после инициализации БД
+      initContainers:
+      - name: wait-for-db
+        image: busybox:1.28
+        command: ['sh', '-c', 'until nc -z bcsdb 5432; do echo waiting for db; sleep 2; done;']

@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: bcsdb
+  namespace: ns-bcs
+  labels:
+    app: bcsdb
+spec:
+  serviceName: bcsdb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bcsdb
+  template:
+    metadata:
+      labels:
+        app: bcsdb
+    spec:
+      containers:
+      - name: postgres
+        image: pgvector/pgvector:pg16
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_USER
+          value: "bcs"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: bcs-secrets
+              key: BCS_DB_PASSWORD
+        - name: POSTGRES_DB
+          value: "postgres"
+        # Проверка живучести подов PostgreSQL
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - pg_isready -U bcs
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        # Проверка готовности пода
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - pg_isready -U bcs
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        volumeMounts:
+        # Основной том данных PostgreSQL
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+          subPath: postgres
+        # Инициализационные скрипты
+        - name: init-scripts
+          mountPath: /docker-entrypoint-initdb.d
+          readOnly: true
+      volumes:
+      # Инициализационные скрипты из хоста
+      - name: init-scripts
+        hostPath:
+          path: /home/plag/NeuronSwarm/bcs-mcp/db/init
+          type: Directory
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data
+      labels:
+        app: bcsdb
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: local-path
+      resources:
+        requests:
+          storage: 10Gi

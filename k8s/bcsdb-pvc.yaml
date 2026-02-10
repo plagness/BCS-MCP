@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bcsdb-storage
+  namespace: ns-bcs
+  labels:
+    app: bcsdb
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ns-db-local
+  resources:
+    requests:
+      storage: 10Gi

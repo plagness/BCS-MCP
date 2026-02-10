@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bcsdb
+  namespace: ns-bcs
+  labels:
+    app: bcsdb
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app: bcsdb
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+    name: postgres
+---
+# NodePort сервис для внешнего доступа к БД (для отладки)
+apiVersion: v1
+kind: Service
+metadata:
+  name: bcsdb-nodeport
+  namespace: ns-bcs
+  labels:
+    app: bcsdb
+spec:
+  type: NodePort
+  selector:
+    app: bcsdb
+  ports:
+  - port: 5432
+    targetPort: 5432
+    nodePort: 30433
+    protocol: TCP
+    name: postgres

@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Наймспейс для всех ресурсов
+namespace: ns-bcs
+
+# Список всех ресурсов для развёртывания
+resources:
+  - namespace.yaml
+  - secret.yaml
+  - configmap.yaml
+  - bcsdb-pvc.yaml
+  - bcsdb-statefulset.yaml
+  - bcsdb-service.yaml
+  - bcsmcp-deployment.yaml
+  - bcsmcp-service.yaml
+
+# Общие метаданные для всех ресурсов
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: neuronswarm
+      app.kubernetes.io/managed-by: kustomize
