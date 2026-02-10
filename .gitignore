@@ -11,3 +11,6 @@ worker/.venv
 data/
 *.log
 .DS_Store
+
+# K8s secrets
+**/k8s/secret.yaml

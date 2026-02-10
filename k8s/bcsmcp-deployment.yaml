@@ -29,6 +29,11 @@ spec:
             configMapKeyRef:
               name: bcs-config
               key: DB_HOST
+        - name: BCS_DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: bcs-config
+              key: DB_PORT
         - name: LLM_MCP_BASE_URL
           valueFrom:
             configMapKeyRef:

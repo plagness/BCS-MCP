@@ -4,8 +4,9 @@ metadata:
   name: bcs-config
   namespace: ns-bcs
 data:
-  # Хост базы данных в кластере
+  # Хост и порт базы данных в кластере
   DB_HOST: "bcsdb"
+  DB_PORT: "5432"
   # URL для подключения к LLM Core в другом namespace
   LLM_CORE_URL: "http://llmcore.ns-llm.svc.cluster.local:8080"
   # Уровень логирования
