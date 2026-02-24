@@ -1,6 +1,6 @@
 name: Bug report
 description: Report a reproducible issue
-labels: [bug]
+labels: [type:bug]
 body:
   - type: textarea
     id: current

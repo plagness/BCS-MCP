@@ -1,6 +1,6 @@
 name: Feature request
 description: Propose an improvement
-labels: [enhancement]
+labels: [type:feature]
 body:
   - type: textarea
     id: problem
