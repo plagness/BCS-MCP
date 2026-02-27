@@ -74,8 +74,8 @@ spec:
       # Инициализационные скрипты из хоста
       - name: init-scripts
         hostPath:
-          path: /home/plag/NeuronSwarm/BCS-MCP/db/init
-          type: Directory
+          path: /opt/bcs-mcp/db/init
+          type: DirectoryOrCreate
   volumeClaimTemplates:
   - metadata:
       name: postgres-data
