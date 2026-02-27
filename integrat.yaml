@@ -1,0 +1,233 @@
+# Integrat — определение плагина bcs-mcp
+# Биржевые данные через BCS Broker — только чтение
+#
+# БЕЗОПАСНОСТЬ: write-операции (bcs.orders.create, cancel, replace) ИСКЛЮЧЕНЫ.
+# Приватные данные (портфель, лимиты) требуют явного access_grant.
+
+plugin:
+  slug: bcs-mcp
+  name: BCS Broker
+  description: Биржевые данные, котировки, портфель — только чтение, торговые операции исключены
+  version: 2026.02.5
+  homepage: https://github.com/plagness/BCS-MCP
+
+provider:
+  base_url: ${BCS_MCP_URL}
+  health_path: /health
+  proxy_mode: mcp
+
+endpoints:
+  # === Рыночные данные (открытые) ===
+  - slug: market.fetch
+    name: Рыночные данные
+    description: Получение рыночных данных по инструментам
+    path: /tools/market.fetch
+    method: POST
+    access: open
+    cache_ttl: 120
+    data_type: medium
+
+  - slug: market.latest
+    name: Последние котировки
+    description: Свежие котировки акций и инструментов
+    path: /tools/market.latest
+    method: POST
+    access: open
+    cache_ttl: 300
+    data_type: medium
+
+  - slug: market.snapshot
+    name: Market snapshot
+    description: Сводка рыночных данных для промптов
+    path: /tools/market.snapshot
+    method: POST
+    access: open
+    cache_ttl: 300
+    data_type: medium
+
+  - slug: bcs.candles.get
+    name: Свечи OHLCV
+    description: Исторические свечи по инструменту
+    path: /tools/bcs.candles.get
+    method: POST
+    access: open
+    cache_ttl: 120
+    data_type: medium
+    params_schema:
+      type: object
+      required: [ticker]
+      properties:
+        ticker:
+          type: string
+        interval:
+          type: string
+          enum: [1m, 5m, 15m, 1h, 1d]
+          default: 1h
+        count:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          default: 100
+
+  - slug: bcs.instruments.by_tickers
+    name: Инструменты по тикерам
+    description: Информация об инструментах по списку тикеров
+    path: /tools/bcs.instruments.by_tickers
+    method: POST
+    access: open
+    cache_ttl: 600
+    data_type: basic
+    params_schema:
+      type: object
+      required: [tickers]
+      properties:
+        tickers:
+          type: string
+          description: Тикеры через запятую
+
+  - slug: bcs.instruments.by_type
+    name: Инструменты по типу
+    description: Список инструментов заданного типа
+    path: /tools/bcs.instruments.by_type
+    method: POST
+    access: open
+    cache_ttl: 600
+    data_type: basic
+    params_schema:
+      type: object
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [stock, bond, futures, currency, etf]
+
+  - slug: bcs.instruments.discounts
+    name: Ставки риска
+    description: Ставки риска (дисконты) по инструментам
+    path: /tools/bcs.instruments.discounts
+    method: POST
+    access: open
+    cache_ttl: 600
+    data_type: basic
+
+  - slug: bcs.trading.status
+    name: Статус торгов
+    description: Текущий статус торговых сессий
+    path: /tools/bcs.trading.status
+    method: POST
+    access: open
+    cache_ttl: 60
+    data_type: basic
+
+  - slug: bcs.trading.schedule
+    name: Расписание торгов
+    description: Расписание торговых сессий на бирже
+    path: /tools/bcs.trading.schedule
+    method: POST
+    access: open
+    cache_ttl: 600
+    data_type: basic
+
+  # === Приватные данные (требуют access_grant) ===
+  - slug: bcs.portfolio.get
+    name: Портфель
+    description: Состав портфеля (только чтение)
+    path: /tools/bcs.portfolio.get
+    method: POST
+    access: private
+    cache_ttl: 0
+    data_type: complex
+
+  - slug: bcs.limits.get
+    name: Торговые лимиты
+    description: Торговые лимиты по счёту
+    path: /tools/bcs.limits.get
+    method: POST
+    access: private
+    cache_ttl: 0
+    data_type: basic
+
+  - slug: private.fetch
+    name: Приватные данные
+    description: Приватные финансовые данные
+    path: /tools/private.fetch
+    method: POST
+    access: private
+    cache_ttl: 0
+    data_type: complex
+
+  - slug: private.latest
+    name: Последний snapshot
+    description: Последний snapshot приватных данных
+    path: /tools/private.latest
+    method: POST
+    access: private
+    cache_ttl: 60
+    data_type: medium
+
+  - slug: bcs.orders.search
+    name: Поиск заявок
+    description: Поиск заявок по фильтрам (только чтение)
+    path: /tools/bcs.orders.search
+    method: POST
+    access: private
+    cache_ttl: 0
+    data_type: medium
+    params_schema:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [active, filled, cancelled]
+        ticker:
+          type: string
+        limit:
+          type: integer
+          default: 50
+
+  - slug: bcs.orders.status
+    name: Статус заявки
+    description: Статус конкретной заявки
+    path: /tools/bcs.orders.status
+    method: POST
+    access: private
+    cache_ttl: 0
+    data_type: basic
+    params_schema:
+      type: object
+      required: [order_id]
+      properties:
+        order_id:
+          type: string
+
+  - slug: bcs.trades.search
+    name: История сделок
+    description: История совершённых сделок
+    path: /tools/bcs.trades.search
+    method: POST
+    access: private
+    cache_ttl: 0
+    data_type: medium
+    params_schema:
+      type: object
+      properties:
+        ticker:
+          type: string
+        date_from:
+          type: string
+        date_to:
+          type: string
+        limit:
+          type: integer
+          default: 100
+
+# ИСКЛЮЧЁННЫЕ эндпоинты (по соображениям безопасности):
+# - bcs.orders.create  — создание заявок (реальная торговля)
+# - bcs.orders.cancel  — отмена заявок
+# - bcs.orders.replace — замена заявок
+# - policy.*           — внутренние политики
+# - decision.*         — внутренние решения
+# - embedding.*        — внутренние эмбеддинги
+# - scripts.*          — внутренние скрипты
+# - signals.*          — внутренние сигналы
+# - selected_assets.*  — внутренние выборки

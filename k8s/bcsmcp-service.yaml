@@ -5,6 +5,8 @@ metadata:
   namespace: ns-bcs
   labels:
     app: bcsmcp
+    ns.component: mcp
+    ns.module: bcs
 spec:
   type: ClusterIP
   selector:

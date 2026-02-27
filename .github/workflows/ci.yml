@@ -12,7 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Docker compose config
-        run: docker compose -f compose.yml config >/dev/null
+        run: |
+          cp .env.example .env 2>/dev/null || touch .env
+          docker compose -f compose.yml config >/dev/null
 
   markdown:
     runs-on: ubuntu-latest
@@ -73,3 +75,6 @@ jobs:
         run: |
           npm install --no-audit --no-fund
           npm run build
+      - name: Run tests
+        working-directory: server
+        run: npm test
