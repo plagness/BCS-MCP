@@ -74,7 +74,7 @@ spec:
       # Инициализационные скрипты из хоста
       - name: init-scripts
         hostPath:
-          path: /home/plag/NeuronSwarm/bcs-mcp/db/init
+          path: /home/plag/NeuronSwarm/BCS-MCP/db/init
           type: Directory
   volumeClaimTemplates:
   - metadata:
