@@ -28,6 +28,7 @@ describe("logger.summarize", () => {
 
   it("summarizes objects with keys and keyCount", () => {
     const result = logger.summarize({ a: 1, b: 2 }) as {
+      type: string;
       keys: string[];
       keyCount: number;
     };
