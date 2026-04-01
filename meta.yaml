@@ -1,0 +1,13 @@
+category: ai
+type: opensource
+status: active
+title:
+  en: "BCS MCP Server"
+  ru: "BCS MCP Сервер"
+description:
+  en: "Trading API + market data MCP server"
+  ru: "MCP сервер для трейдинга и рыночных данных"
+tags: [mcp, typescript, trading, api]
+focus:
+  - backend
+  - ai
